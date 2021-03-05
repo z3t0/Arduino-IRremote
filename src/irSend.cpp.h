@@ -355,7 +355,8 @@ void IRsend::sendBiphaseData(unsigned int aBiphaseTimeUnit, uint32_t aData, uint
 // The mark output is modulated at the PWM frequency.
 //
 void IRsend::mark(unsigned int aMarkMicros) {
-#ifdef USE_SOFT_SEND_PWM
+    setFeedbackLED(true);
+#ifdef USE_SOFT_SEND_PWM && !defined(ESP32) // for esp32 we use PWM generation by hw_timer_t for each pin
     unsigned long start = micros();
     unsigned long nextPeriodEnding = start;
     while (micros() - start < aMarkMicros) {
@@ -370,7 +371,6 @@ void IRsend::mark(unsigned int aMarkMicros) {
     }
 
 #else
-
 #  if defined(USE_NO_SEND_PWM)
     digitalWrite(sendPin, LOW); // Set output to active low.
 
@@ -385,7 +385,8 @@ void IRsend::mark(unsigned int aMarkMicros) {
 }
 
 void IRsend::ledOff() {
-#if defined(USE_NO_SEND_PWM)
+    setFeedbackLED(false);
+#if defined(USE_SOFT_SEND_PWM) && !defined(ESP32) // for esp32 we use PWM generation by hw_timer_t for each pin
     digitalWrite(sendPin, HIGH); // Set output to inactive high.
 #else
     TIMER_DISABLE_SEND_PWM; // Disable PWM output
